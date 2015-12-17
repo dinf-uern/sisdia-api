@@ -9,7 +9,7 @@ var config = {
       name: 'buscafeira'
     },
     dumpSql: true,
-    port: 3000,
+    port: 3500,
     db: 'postgres://postgres:postgres@localhost:5432/sisdia-dev'
   },
 
@@ -19,7 +19,7 @@ var config = {
       name: 'buscafeira'
     },
     dropTables: true,
-    port: 3000,
+    port: 3500,
     db: 'postgres://postgres:postgres@localhost:5432/sisdia-test'
   },
 
