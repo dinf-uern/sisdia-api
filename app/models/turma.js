@@ -17,8 +17,8 @@ module.exports = function(sequelize, DataTypes) {
     tableName: 'turmas',
     classMethods: {
       associate: function(models) {
-        Turma.belongsTo(models.Sala, {foreignKey: 'salaId', targetKey: 'id'});
-        Turma.belongsTo(models.Curso, {foreignKey: 'cursoId', targetKey: 'id'});
+        Turma.belongsTo(models.Sala, {as:'sala', foreignKey: 'salaId', targetKey: 'id'});
+        Turma.belongsTo(models.Curso, {as:'curso', foreignKey: 'cursoId', targetKey: 'id'});
       }
     }
   });

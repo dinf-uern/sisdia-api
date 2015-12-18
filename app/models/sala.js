@@ -25,7 +25,7 @@ module.exports = function(sequelize, DataTypes) {
     tableName: 'salas',
     classMethods: {
       associate: function(models) {
-
+        Sala.hasMany(models.Turma, {as: 'turmas', foreignKey: 'salaId' });
       }
     }
   });
