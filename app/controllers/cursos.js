@@ -1,9 +1,37 @@
 var express = require('express'),
   router = express.Router(),
+  _ = require('underscore'),
   httpErrors = require('httperrors'),
   db = require('../models');
 
+
 var cursos = {
+  getInclude: function(query){
+    var result = [];
+
+    var includeOptions = {
+      'tags': { model: db.Tag, as: 'tags' },
+      'turmas': { model: db.Turma, as: 'turmas' }
+    }
+
+
+    if (query.include) {
+      var include = JSON.parse(query.include);
+
+      _.each(include, function(incItem){
+        if (includeOptions[incItem.model]) {
+          var includeOption = _.extend(
+            _.omit(incItem, 'model'),
+            includeOptions[incItem.model]
+          );
+
+          result.push(includeOption);
+        }
+      });
+    }
+
+    return result;
+  },
   create: function(req, res, next){
     var curso = db.Curso.build(req.body);
 
@@ -14,19 +42,12 @@ var cursos = {
       });
   },
   read: function(req, res, next){
-    //var incCidades = { model: db.Cidade, as: 'cidades' };
 
     var opt = {
-      where: {id: req.params.id},
-      include: []
+      where: {id: req.params.id}
     };
 
-    if (req.query.include) {
-      var include = req.query.include.split(',');
-
-      //if(include.indexOf('cidades') >= 0)
-        //opt.include.push(incCidades);
-    }
+    opt.include = cursos.getInclude(req.query);
 
     db.Curso.findOne(opt).then(function(result){
       if (!result)
@@ -40,30 +61,19 @@ var cursos = {
   list: function(req, res, next){
     var op = 'findAll';
 
-    //var incCidades = { model: db.Cidade, as: 'cidades' };
-
     var limit = req.query.limit && parseInt(req.query.limit) <= 20 ? req.query.limit : 10 ;
     var offset = req.query.offset || 0;
 
     var opt = {
       where: [],
       limit: limit,
-      offset: offset,
-      include: []
+      offset: offset
     };
 
     if (req.query.q)
       opt.where.push( { nome: { $iLike : "%" + req.query.q + "%" } } );
 
-    if (req.query.include) {
-      var include = req.query.include.split(',');
-
-      if (include.indexOf('count') >= 0)
-        op = 'findAndCountAll';
-
-      //if(include.indexOf('cidades') >= 0)
-      //  opt.include.push(incCidades);
-    }
+    opt.include = cursos.getInclude(req.query);
 
     if (req.query.attributes) {
       opt.attributes = req.query.attributes.split(',');
