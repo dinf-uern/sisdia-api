@@ -8,6 +8,7 @@ var bodyParser = require('body-parser');
 var compress = require('compression');
 var methodOverride = require('method-override');
 var httpErrors = require('httperrors');
+var sequelize = require('sequelize');
 
 module.exports = function(app, config) {
 
@@ -40,7 +41,11 @@ module.exports = function(app, config) {
       console.log(err);
 
     if (!err.http) {
-      error = httpErrors.InternalServerError('Ops. Ocorreu um problema!');
+      if (err.name === 'SequelizeValidationError') {
+        error = httpErrors.BadRequest(err.message)
+      } else {
+        error = httpErrors.InternalServerError('Ops. Ocorreu um problema!');
+      }
     } else {
       error = err;
     }

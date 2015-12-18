@@ -1,0 +1,95 @@
+var express = require('express'),
+  router = express.Router(),
+  httpErrors = require('httperrors'),
+  db = require('../models');
+
+var tags = {
+  create: function(req, res, next){
+    var tag = db.Tag.build(req.body);
+
+      tag.save().then(function(result){
+        res.send(result);
+      }).catch(function(err) {
+        next(err);
+      });
+  },
+  read: function(req, res, next){
+    //var incCidades = { model: db.Cidade, as: 'cidades' };
+
+    var opt = {
+      where: {id: req.params.id},
+      include: []
+    };
+
+    if (req.query.include) {
+      var include = req.query.include.split(',');
+
+      //if(include.indexOf('cidades') >= 0)
+        //opt.include.push(incCidades);
+    }
+
+    db.Tag.findOne(opt).then(function(result){
+      if (!result)
+        return next(new httpErrors.BadRequest('Tag inexistente!'));
+
+      res.send(result);
+    }).catch(function(err){
+      next(err);
+    });
+  },
+  list: function(req, res, next){
+    var op = 'findAll';
+
+    //var incCidades = { model: db.Cidade, as: 'cidades' };
+
+    var limit = req.query.limit && parseInt(req.query.limit) <= 20 ? req.query.limit : 10 ;
+    var offset = req.query.offset || 0;
+
+    var opt = {
+      where: [],
+      limit: limit,
+      offset: offset,
+      include: []
+    };
+
+    if (req.query.q)
+      opt.where.push( { nome: { $iLike : "%" + req.query.q + "%" } } );
+
+    if (req.query.include) {
+      var include = req.query.include.split(',');
+
+      if (include.indexOf('count') >= 0)
+        op = 'findAndCountAll';
+
+      //if(include.indexOf('cidades') >= 0)
+      //  opt.include.push(incCidades);
+    }
+
+    if (req.query.attributes) {
+      opt.attributes = req.query.attributes.split(',');
+    }
+
+    db.Tag[op](opt).then(function(result){
+      res.send(result);
+    }).catch(function(err){
+      next(err);
+    });
+  },
+  update: function(req, res, next){
+    db.Tag.findById(req.params.id).then(function(tag){
+      if (!tag)
+        return next(httpErrors.BadRequest('Tag inexistente!'));
+
+        tag.update(req.body).then(function(){
+          res.send(tag);
+        }).catch(function(err){
+          next(err);
+        });
+
+    }).catch(function(err){
+      next(err);
+    });
+  }
+}
+
+module.exports = tags;
