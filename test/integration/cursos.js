@@ -4,27 +4,40 @@ process.env.NODE_ENV = 'test';
 var express = require('express'),
   request = require('supertest'),
   config = require('../../config/config'),
+  _ = require('underscore'),
   db = require('../../app/models'),
   app = express();
 
 require('../../config/express')(app, config);
 
 describe('/v1/cursos', function () {
-  var curso;
+  var cursos;
 
   before(function(done){
-    var data = {
-      nome: 'qualquer curso',
-      descricao: 'some description',
-      cargaHoraria: 20
-    };
 
-    return db.Curso.sync().then(function(){
-      return db.Curso.create(data).then(function(result){
-        curso = result;
+    return db.sequelize.sync().then(function(){
+      var operacoes = [];
+
+      for ( var i = 1; i <= 10; i++ ){
+        operacoes.push(db.Curso.create({
+          nome: 'curso' + i,
+          descricao: 'descricao' + i,
+          cargaHoraria: 10 + i
+        }))
+      }
+
+      Promise.all(operacoes).then(function(result){
+
+        cursos = _.map(result, function(item){
+          return item.get();
+        });
+
         done();
-      });
+
+      })
+
     })
+
   });
 
   after(function(){
@@ -40,6 +53,7 @@ describe('/v1/cursos', function () {
         .expect(200, done)
         .expect(function(res){
           res.body.should.instanceOf(Array);
+          res.body.should.have.length(10);
         })
     });
 
@@ -87,13 +101,13 @@ describe('/v1/cursos', function () {
   describe('get /:id', function(){
     it('deve retornar um curso', function (done) {
       request(app)
-        .get('/v1/cursos/' + curso.id)
+        .get('/v1/cursos/' + cursos[0].id)
         .set('Accept', 'application/json')
         .expect('Content-Type', /json/)
         .expect(200, done)
         .expect(function(res){
           res.body.should.instanceOf(Object);
-          res.body.should.have.property('id', curso.id);
+          res.body.should.have.property('id', cursos[0].id);
         })
     });
 
@@ -116,14 +130,14 @@ describe('/v1/cursos', function () {
       var data = {nome: 'novo nome'};
 
       request(app)
-        .put('/v1/cursos/' + curso.id)
+        .put('/v1/cursos/' + cursos[0].id)
         .send(data)
         .set('Accept', 'application/json')
         .expect('Content-Type', /json/)
         .expect(200, done)
         .expect(function(res){
           res.body.should.instanceOf(Object);
-          res.body.should.have.property('id', curso.id);
+          res.body.should.have.property('id', cursos[0].id);
           res.body.should.have.property('nome', data.nome);
         })
     });
