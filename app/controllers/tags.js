@@ -64,14 +64,13 @@ var tags = {
     var offset = req.query.offset || 0;
 
     var opt = {
-      where: [],
       limit: limit,
-      offset: offset,
-      include: []
+      offset: offset
     };
 
-    if (req.query.q)
-      opt.where.push( { nome: { $iLike : "%" + req.query.q + "%" } } );
+    if (req.query.where){
+      opt.where = JSON.parse(req.query.where);
+    }
 
     opt.include = tags.getInclude(req.query);
 

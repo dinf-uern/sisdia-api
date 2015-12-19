@@ -64,13 +64,13 @@ var turmas = {
     var offset = req.query.offset || 0;
 
     var opt = {
-      where: [],
       limit: limit,
       offset: offset
     };
 
-    if (req.query.q)
-      opt.where.push( { nome: { $iLike : "%" + req.query.q + "%" } } );
+    if (req.query.where){
+      opt.where = JSON.parse(req.query.where);
+    }
 
     opt.include = turmas.getInclude(req.query);
 
