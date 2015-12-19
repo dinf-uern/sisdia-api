@@ -35,11 +35,23 @@ var cursos = {
   create: function(req, res, next){
     var curso = db.Curso.build(req.body);
 
-      curso.save().then(function(result){
-        res.send(result);
-      }).catch(function(err) {
-        next(err);
+    db.sequelize.transaction(function (t) {
+      return curso.save({transaction: t}).then(function(curso){
+
+        return db.Tag.bulkFindOrCreate(req.body.tags || [], {transaction: t})
+          .then(function(tags){
+            return curso.setTags(tags, {transaction: t}).then(function(){
+              res.send(curso);
+            });
+          });
+
       });
+
+    }).catch(function(err){
+      return next(err);
+    });
+
+
   },
   read: function(req, res, next){
 
@@ -86,18 +98,25 @@ var cursos = {
     });
   },
   update: function(req, res, next){
-    db.Curso.findById(req.params.id).then(function(curso){
-      if (!curso)
-        return next(httpErrors.BadRequest('Curso inexistente!'));
+    db.sequelize.transaction(function (t) {
 
-        curso.update(req.body).then(function(){
-          res.send(curso);
-        }).catch(function(err){
-          next(err);
+      return db.Curso.findById(req.params.id).then(function(curso){
+        if (!curso)
+          return next(httpErrors.BadRequest('Curso inexistente!'));
+
+        return curso.update(req.body, {transaction: t}).then(function(){
+          return db.Tag.bulkFindOrCreate(req.body.tags || [], {transaction: t})
+            .then(function(tags){
+              return curso.setTags(tags, {transaction: t}).then(function(){
+                res.send(curso);
+              });
+            });
         });
 
+      });
+
     }).catch(function(err){
-      next(err);
+      return next(err);
     });
   }
 }
