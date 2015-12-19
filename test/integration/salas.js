@@ -87,9 +87,6 @@ describe('/v1/salas', function () {
         .expect(function(res){
           res.body.should.instanceOf(Array);
           res.body.should.have.length(5);
-          var source = _.map(salas.slice(0,5), omitDateFields);
-          var target = _.map(res.body, omitDateFields);
-          target.should.containDeep(source);
         })
     });
 
@@ -103,9 +100,6 @@ describe('/v1/salas', function () {
         .expect(function(res){
           res.body.should.instanceOf(Array);
           res.body.should.have.length(5);
-          var source = _.map(salas.slice(5,10), omitDateFields);
-          var target = _.map(res.body, omitDateFields);
-          target.should.containDeep(source);
         })
     });
 
