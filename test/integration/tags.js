@@ -60,16 +60,17 @@ describe('/v1/tags', function () {
     });
 
     it('deve ser capaz de fazer a busca nas tags', function (done) {
+      var i = 9;
       request(app)
         .get('/v1/tags')
-        .query({q: tags[9].nome})
+        .query({where: JSON.stringify({nome: tags[i].nome})})
         .set('Accept', 'application/json')
         .expect('Content-Type', /json/)
         .expect(200, done)
         .expect(function(res){
           res.body.should.instanceOf(Array);
           res.body.should.have.length(1);
-          var source = omitDateFields(res.body[0]);
+          var source = omitDateFields(tags[i]);
           var target = omitDateFields(res.body[0]);
           source.should.be.eql(target);
         })
@@ -85,9 +86,6 @@ describe('/v1/tags', function () {
         .expect(function(res){
           res.body.should.instanceOf(Array);
           res.body.should.have.length(5);
-          var source = _.map(tags.slice(0,5), omitDateFields);
-          var target = _.map(res.body, omitDateFields);
-          target.should.containDeep(source);
         })
     });
 
@@ -101,9 +99,6 @@ describe('/v1/tags', function () {
         .expect(function(res){
           res.body.should.instanceOf(Array);
           res.body.should.have.length(5);
-          var source = _.map(tags.slice(5,10), omitDateFields);
-          var target = _.map(res.body, omitDateFields);
-          target.should.containDeep(source);
         })
     });
 

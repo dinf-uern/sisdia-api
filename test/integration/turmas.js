@@ -60,16 +60,17 @@ describe('/v1/turmas', function () {
     });
 
     it('deve ser capaz de fazer a busca nas turmas', function (done) {
+      var i = 9;
       request(app)
         .get('/v1/turmas')
-        .query({q: turmas[9].nome})
+        .query({where: JSON.stringify({nome: turmas[i].nome})})
         .set('Accept', 'application/json')
         .expect('Content-Type', /json/)
         .expect(200, done)
         .expect(function(res){
           res.body.should.instanceOf(Array);
           res.body.should.have.length(1);
-          var source = omitDateFields(res.body[0]);
+          var source = omitDateFields(turmas[i]);
           var target = omitDateFields(res.body[0]);
           source.should.be.eql(target);
         })
@@ -85,9 +86,6 @@ describe('/v1/turmas', function () {
         .expect(function(res){
           res.body.should.instanceOf(Array);
           res.body.should.have.length(5);
-          var source = _.map(turmas.slice(0,5), omitDateFields);
-          var target = _.map(res.body, omitDateFields);
-          target.should.containDeep(source);
         })
     });
 
@@ -101,9 +99,6 @@ describe('/v1/turmas', function () {
         .expect(function(res){
           res.body.should.instanceOf(Array);
           res.body.should.have.length(5);
-          var source = _.map(turmas.slice(5,10), omitDateFields);
-          var target = _.map(res.body, omitDateFields);
-          target.should.containDeep(source);
         })
     });
 
