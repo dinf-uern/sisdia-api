@@ -62,16 +62,17 @@ describe('/v1/cursos', function () {
     });
 
     it('deve ser capaz de fazer a busca nos cursos', function (done) {
+      var i = 9;
       request(app)
         .get('/v1/cursos')
-        .query({q: cursos[9].nome})
+        .query({where: JSON.stringify({nome: cursos[i].nome})})
         .set('Accept', 'application/json')
         .expect('Content-Type', /json/)
         .expect(200, done)
         .expect(function(res){
           res.body.should.instanceOf(Array);
           res.body.should.have.length(1);
-          var source = omitDateFields(res.body[0]);
+          var source = omitDateFields(cursos[i]);
           var target = omitDateFields(res.body[0]);
           source.should.be.eql(target);
         })
