@@ -15,38 +15,28 @@ function omitDateFields(obj){
 }
 
 describe('/v1/tags', function () {
-  var tags;
-
-  before(function(done){
-
-    return db.sequelize.sync().then(function(){
-      var operacoes = [];
-
-      for ( var i = 1; i <= 10; i++ ){
-        operacoes.push(db.Tag.create({
-          nome: 'tag' + i
-        }))
-      }
-
-      Promise.all(operacoes).then(function(result){
-
-        tags = _.map(result, function(item){
-          return item.get();
-        });
-
-        done();
-
-      })
-
-    })
-
-  });
-
-  after(function(){
-    return db.sequelize.drop();
-  });
 
   describe('get /', function(){
+    var tags;
+
+    before(function(){
+      return db.sequelize.sync({force: true}).then(function(){
+        var operacoes = [];
+
+        for ( var i = 1; i <= 10; i++ ){
+          operacoes.push(db.Tag.create({
+            nome: 'tag' + i
+          }))
+        }
+
+        return Promise.all(operacoes).then(function(result){
+          tags = _.map(result, function(item){
+            return item.get();
+          });
+        })
+      });
+    });
+
     it('deve retornar as tags', function (done) {
       request(app)
         .get('/v1/tags')
@@ -56,7 +46,7 @@ describe('/v1/tags', function () {
         .expect(function(res){
           res.body.should.instanceOf(Array);
           res.body.should.have.length(10);
-        })
+        });
     });
 
     it('deve ser capaz de fazer a busca nas tags', function (done) {
@@ -101,10 +91,13 @@ describe('/v1/tags', function () {
           res.body.should.have.length(5);
         })
     });
-
-  })
+  });
 
   describe('post /', function(){
+    before(function(){
+      return db.sequelize.sync({force: true});
+    });
+
     it('deve criar uma tag', function (done) {
       var data = {
         nome: 'some name'
@@ -120,7 +113,7 @@ describe('/v1/tags', function () {
           res.body.should.instanceOf(Object);
           res.body.should.have.property('id');
           res.body.should.have.property('nome', data.nome);
-        })
+        });
     });
 
     it('deve impedir que um tag sem nome seja criado', function (done) {
@@ -139,21 +132,33 @@ describe('/v1/tags', function () {
           res.body.should.have.property('message');
         })
     });
-  })
 
-  describe('get /:id', function(){
+  });
+
+  describe('get /:id', function() {
+    var tag;
+
+    before(function(){
+      return db.sequelize.sync({force: true}).then(function(){
+        return db.Tag.create({
+          nome: 'tag1'
+        }).then(function(result){
+          tag = result;
+        });
+      });
+    });
+
     it('deve retornar um tag', function (done) {
       request(app)
-        .get('/v1/tags/' + tags[0].id)
+        .get('/v1/tags/' + tag.id)
         .set('Accept', 'application/json')
         .expect('Content-Type', /json/)
         .expect(200, done)
-        .expect(function(res){
+        .expect(function (res) {
           res.body.should.instanceOf(Object);
-          res.body.should.have.property('id', tags[0].id);
+          res.body.should.have.property('id', tag.id);
         })
     });
-
 
     it('deve informar quando um tag inválido tentar ser retornado', function (done) {
       request(app)
@@ -166,21 +171,34 @@ describe('/v1/tags', function () {
           res.body.should.have.property('message');
         })
     });
-  })
+
+  });
 
   describe('put /:id', function(){
+    var tag;
+
+    before(function(){
+      return db.sequelize.sync({force: true}).then(function(){
+        return db.Tag.create({
+          nome: 'tag1'
+        }).then(function(result){
+          tag = result;
+        });
+      });
+    });
+
     it('deve ser capaz de atualizar uma tag', function (done) {
       var data = {nome: 'novo nome'};
 
       request(app)
-        .put('/v1/tags/' + tags[0].id)
+        .put('/v1/tags/' + tag.id)
         .send(data)
         .set('Accept', 'application/json')
         .expect('Content-Type', /json/)
         .expect(200, done)
         .expect(function(res){
           res.body.should.instanceOf(Object);
-          res.body.should.have.property('id', tags[0].id);
+          res.body.should.have.property('id', tag.id);
           res.body.should.have.property('nome', data.nome);
         })
     });
@@ -199,6 +217,7 @@ describe('/v1/tags', function () {
           res.body.should.have.property('message');
         })
     });
+
   });
 
 });
