@@ -19,57 +19,45 @@ function toPlain(obj){
 }
 
 describe('/v1/cursos', function () {
-  var cursos, tags;
-
-  before(function(done){
-
-    return db.sequelize.sync().then(function(){
-
-      return db.Tag.bulkCreate([
-        { nome: 'tag1' },
-        { nome: 'tag2' }
-      ], {returning: true}).then(function(tagsResult){
-        tags = _.map(tagsResult, toPlain);
-
-        var cursosOps = [];
-
-        for ( var i = 1; i <= 10; i++ ){
-          cursosOps.push(db.Curso.create({
-            nome: 'curso' + i,
-            descricao: 'descricao' + i,
-            cargaHoraria: 10 + i
-          }))
-        }
-
-        return Promise.all(cursosOps).then(function(cursosResult){
-          var setTagsOperations;
-
-          cursos = _.map(cursosResult, function(item){
-            return item.get();
-          });
-
-          setTagsOperations = _.map(cursosResult, function(item){
-            return item.setTags(tagsResult);
-          })
-
-          return Promise.all(setTagsOperations).then(function(){
-            done();
-          });
-
-        })
-      });
-
-
-
-    })
-
-  });
-
-  after(function(){
-    return db.sequelize.drop();
-  });
 
   describe('get /', function(){
+    var cursos, tags;
+
+    before(function(){
+      return db.sequelize.sync({force: true}).then(function(){
+        return db.Tag.bulkCreate([
+          { nome: 'tag1' },
+          { nome: 'tag2' }
+        ], {returning: true}).then(function(tagsResult){
+          tags = _.map(tagsResult, toPlain);
+
+          var cursosOps = [];
+
+          for ( var i = 1; i <= 10; i++ ){
+            cursosOps.push(db.Curso.create({
+              nome: 'curso' + i,
+              descricao: 'descricao' + i,
+              cargaHoraria: 10 + i
+            }))
+          }
+
+          return Promise.all(cursosOps).then(function(cursosResult){
+            var setTagsOperations;
+
+            cursos = _.map(cursosResult, function(item){
+              return item.get();
+            });
+
+            setTagsOperations = _.map(cursosResult, function(item){
+              return item.setTags(tagsResult);
+            })
+
+            return Promise.all(setTagsOperations);
+          });
+        });
+      });
+    });
+
     it('deve retornar os cursos', function (done) {
       request(app)
         .get('/v1/cursos')
@@ -81,7 +69,7 @@ describe('/v1/cursos', function () {
           res.body.should.have.length(10);
         })
     });
-
+//
     it('deve ser capaz de retornar os cursos incluindo as tags', function (done) {
       request(app)
         .get('/v1/cursos')
@@ -148,6 +136,10 @@ describe('/v1/cursos', function () {
   })
 
   describe('post /', function(){
+    before(function(){
+      return db.sequelize.sync({force: true});
+    });
+
     it('deve criar um curso', function (done) {
       var data = {
         nome: 'some name',
@@ -187,21 +179,45 @@ describe('/v1/cursos', function () {
   })
 
   describe('get /:id', function(){
+    var curso, tags;
+
+    before(function(){
+      return db.sequelize.sync({force: true}).then(function(){
+        return db.Tag.bulkCreate([
+          { nome: 'tag1' },
+          { nome: 'tag2' }
+        ], {returning: true}).then(function(tagsResult){
+          tags = _.map(tagsResult, toPlain);
+
+          var cursosOps = [];
+
+          return db.Curso.create({
+            nome: 'curso1',
+            descricao: 'qualquer',
+            cargaHoraria: 20
+          }).then(function(result){
+            curso = result.get({plain: true});
+            return result.setTags(tagsResult);
+          });
+        });
+      });
+    });
+
     it('deve retornar um curso', function (done) {
       request(app)
-        .get('/v1/cursos/' + cursos[0].id)
+        .get('/v1/cursos/' + curso.id)
         .set('Accept', 'application/json')
         .expect('Content-Type', /json/)
         .expect(200, done)
         .expect(function(res){
           res.body.should.instanceOf(Object);
-          res.body.should.have.property('id', cursos[0].id);
+          res.body.should.have.property('id', curso.id);
         })
     });
 
     it('deve ser capaz de retornar um curso incluindo as tags', function (done) {
       request(app)
-        .get('/v1/cursos/' + cursos[0].id)
+        .get('/v1/cursos/' + curso.id)
         .query({include: JSON.stringify([
           { model: "tags" }
         ])})
@@ -218,7 +234,6 @@ describe('/v1/cursos', function () {
         })
     });
 
-
     it('deve informar quando um curso inválido tentar ser retornado', function (done) {
       request(app)
         .get('/v1/cursos/' + 1000)
@@ -233,18 +248,32 @@ describe('/v1/cursos', function () {
   })
 
   describe('put /:id', function(){
+    var curso;
+
+    before(function(){
+      return db.sequelize.sync({force: true}).then(function(){
+        return db.Curso.create({
+          nome: 'curso1',
+          cargaHoraria: 20,
+          descricao: 'qualquer'
+        }).then(function(result){
+          curso = result;
+        });
+      });
+    });
+
     it('deve ser capaz de atualizar um curso', function (done) {
       var data = {nome: 'novo nome'};
 
       request(app)
-        .put('/v1/cursos/' + cursos[0].id)
+        .put('/v1/cursos/' + curso.id)
         .send(data)
         .set('Accept', 'application/json')
         .expect('Content-Type', /json/)
         .expect(200, done)
         .expect(function(res){
           res.body.should.instanceOf(Object);
-          res.body.should.have.property('id', cursos[0].id);
+          res.body.should.have.property('id', curso.id);
           res.body.should.have.property('nome', data.nome);
         })
     });
