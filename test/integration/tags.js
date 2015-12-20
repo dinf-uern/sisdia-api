@@ -43,7 +43,7 @@ describe('/v1/tags', function () {
   });
 
   after(function(){
-    return db.Tag.destroy({ where:{} });
+    return db.sequelize.drop();
   });
 
   describe('get /', function(){

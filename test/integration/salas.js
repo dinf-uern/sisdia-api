@@ -45,7 +45,7 @@ describe('/v1/salas', function () {
   });
 
   after(function(){
-    return db.Sala.destroy({ where:{} });
+    return db.sequelize.drop();
   });
 
   describe('get /', function(){

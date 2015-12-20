@@ -43,7 +43,7 @@ describe('/v1/turmas', function () {
   });
 
   after(function(){
-    return db.Turma.destroy({ where:{} });
+    return db.sequelize.drop();
   });
 
   describe('get /', function(){

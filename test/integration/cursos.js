@@ -45,7 +45,7 @@ describe('/v1/cursos', function () {
   });
 
   after(function(){
-    return db.Curso.destroy({ where:{} });
+    return db.sequelize.drop();
   });
 
   describe('get /', function(){
