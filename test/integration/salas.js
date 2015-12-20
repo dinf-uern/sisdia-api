@@ -15,40 +15,31 @@ function omitDateFields(obj){
 }
 
 describe('/v1/salas', function () {
-  var salas;
-
-  before(function(done){
-
-    return db.sequelize.sync().then(function() {
-      var operacoes = [];
-
-      for (var i = 1; i <= 10; i++) {
-        operacoes.push(db.Sala.create({
-          nome: 'sala' + i,
-          descricao: 'descricao' + i,
-          localizacao: 10 + i
-        }))
-      }
-
-      Promise.all(operacoes).then(function (result) {
-
-        salas = _.map(result, function (item) {
-          return item.get();
-        });
-
-        done();
-
-      })
-
-    })
-
-  });
-
-  after(function(){
-    return db.sequelize.drop();
-  });
 
   describe('get /', function(){
+    var salas;
+
+    before(function(){
+      return db.sequelize.sync({force: true}).then(function() {
+        var operacoes = [];
+
+        for (var i = 1; i <= 10; i++) {
+          operacoes.push(db.Sala.create({
+            nome: 'sala' + i,
+            descricao: 'descricao' + i,
+            localizacao: 10 + i
+          }))
+        }
+
+        return Promise.all(operacoes).then(function (result) {
+          salas = _.map(result, function (item) {
+            return item.get();
+          });
+        })
+      })
+
+    });
+
     it('deve retornar as salas', function (done) {
       request(app)
         .get('/v1/salas')
@@ -106,7 +97,12 @@ describe('/v1/salas', function () {
 
   })
 
+
   describe('post /', function(){
+    before(function(){
+      return db.sequelize.sync({force: true});
+    });
+
     it('deve criar uma sala', function (done) {
       var data = {
         nome: 'some name'
@@ -144,18 +140,29 @@ describe('/v1/salas', function () {
   })
 
   describe('get /:id', function(){
+    var sala;
+
+    before(function(){
+      return db.sequelize.sync({force: true}).then(function(){
+        return db.Sala.create({
+          nome: 'sala1'
+        }).then(function(result){
+          sala = result;
+        });
+      });
+    });
+
     it('deve retornar uma sala', function (done) {
       request(app)
-        .get('/v1/salas/' + salas[0].id)
+        .get('/v1/salas/' + sala.id)
         .set('Accept', 'application/json')
         .expect('Content-Type', /json/)
         .expect(200, done)
         .expect(function(res){
           res.body.should.instanceOf(Object);
-          res.body.should.have.property('id', salas[0].id);
+          res.body.should.have.property('id', sala.id);
         })
     });
-
 
     it('deve informar quando uma sala inválida tentar ser retornado', function (done) {
       request(app)
@@ -170,19 +177,32 @@ describe('/v1/salas', function () {
     });
   })
 
+
   describe('put /:id', function(){
+    var sala;
+
+    before(function(){
+      return db.sequelize.sync({force: true}).then(function(){
+        return db.Sala.create({
+          nome: 'sala1'
+        }).then(function(result){
+          sala = result;
+        });
+      });
+    });
+
     it('deve ser capaz de atualizar uma sala', function (done) {
       var data = {nome: 'novo nome'};
 
       request(app)
-        .put('/v1/salas/' + salas[0].id)
+        .put('/v1/salas/' + sala.id)
         .send(data)
         .set('Accept', 'application/json')
         .expect('Content-Type', /json/)
         .expect(200, done)
         .expect(function(res){
           res.body.should.instanceOf(Object);
-          res.body.should.have.property('id', salas[0].id);
+          res.body.should.have.property('id', sala.id);
           res.body.should.have.property('nome', data.nome);
         })
     });
@@ -201,6 +221,7 @@ describe('/v1/salas', function () {
           res.body.should.have.property('message');
         })
     });
+
   });
 
 });
