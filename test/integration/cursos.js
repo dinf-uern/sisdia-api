@@ -14,31 +14,52 @@ function omitDateFields(obj){
   return _.omit(obj, 'createdAt', 'updatedAt');
 }
 
+function toPlain(obj){
+  return obj.get({plain: true});
+}
+
 describe('/v1/cursos', function () {
-  var cursos;
+  var cursos, tags;
 
   before(function(done){
 
     return db.sequelize.sync().then(function(){
-      var operacoes = [];
 
-      for ( var i = 1; i <= 10; i++ ){
-        operacoes.push(db.Curso.create({
-          nome: 'curso' + i,
-          descricao: 'descricao' + i,
-          cargaHoraria: 10 + i
-        }))
-      }
+      return db.Tag.bulkCreate([
+        { nome: 'tag1' },
+        { nome: 'tag2' }
+      ], {returning: true}).then(function(tagsResult){
+        tags = _.map(tagsResult, toPlain);
 
-      Promise.all(operacoes).then(function(result){
+        var cursosOps = [];
 
-        cursos = _.map(result, function(item){
-          return item.get();
-        });
+        for ( var i = 1; i <= 10; i++ ){
+          cursosOps.push(db.Curso.create({
+            nome: 'curso' + i,
+            descricao: 'descricao' + i,
+            cargaHoraria: 10 + i
+          }))
+        }
 
-        done();
+        return Promise.all(cursosOps).then(function(cursosResult){
+          var setTagsOperations;
 
-      })
+          cursos = _.map(cursosResult, function(item){
+            return item.get();
+          });
+
+          setTagsOperations = _.map(cursosResult, function(item){
+            return item.setTags(tagsResult);
+          })
+
+          return Promise.all(setTagsOperations).then(function(){
+            done();
+          });
+
+        })
+      });
+
+
 
     })
 
@@ -58,6 +79,26 @@ describe('/v1/cursos', function () {
         .expect(function(res){
           res.body.should.instanceOf(Array);
           res.body.should.have.length(10);
+        })
+    });
+
+    it('deve ser capaz de retornar os cursos incluindo as tags', function (done) {
+      request(app)
+        .get('/v1/cursos')
+        .query({include: JSON.stringify([
+          { model: "tags" }
+        ])})
+        .set('Accept', 'application/json')
+        .expect('Content-Type', /json/)
+        .expect(200, done)
+        .expect(function(res){
+          res.body.should.instanceOf(Array);
+          res.body.should.have.length(10);
+          var source = _.map(tags, omitDateFields);
+          var target = _.map(res.body[0].tags, function(item){
+            return _.omit(item, 'createdAt', 'updatedAt');
+          });
+          target.should.be.containDeep(source);
         })
     });
 
@@ -155,6 +196,25 @@ describe('/v1/cursos', function () {
         .expect(function(res){
           res.body.should.instanceOf(Object);
           res.body.should.have.property('id', cursos[0].id);
+        })
+    });
+
+    it('deve ser capaz de retornar um curso incluindo as tags', function (done) {
+      request(app)
+        .get('/v1/cursos/' + cursos[0].id)
+        .query({include: JSON.stringify([
+          { model: "tags" }
+        ])})
+        .set('Accept', 'application/json')
+        .expect('Content-Type', /json/)
+        .expect(200, done)
+        .expect(function(res){
+          res.body.should.instanceOf(Object);
+          var source = _.map(tags, omitDateFields);
+          var target = _.map(res.body.tags, function(item){
+            return _.omit(item, 'createdAt', 'updatedAt');
+          });
+          target.should.be.containDeep(source);
         })
     });
 
