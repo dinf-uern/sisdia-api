@@ -58,7 +58,8 @@ module.exports = function(sequelize, DataTypes) {
           if (!value.horaInicio || !moment(value.horaInicio).isValid())
             throw new Error('Informe uma hora de início válilda para as aulas!');
 
-
+          if (!value.horaTermino || !moment(value.horaTermino).isValid())
+            throw new Error('Informe uma hora de término válilda para as aulas!');
         }
       }
     }
