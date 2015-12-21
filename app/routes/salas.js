@@ -6,6 +6,7 @@ module.exports = function (app) {
   app.use('/v1/salas', router);
 };
 
+router.get('/count', salas.count);
 router.get('', salas.list);
 router.post('', salas.create);
 router.put('/:id', salas.update);

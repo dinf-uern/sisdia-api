@@ -6,6 +6,7 @@ module.exports = function (app) {
   app.use('/v1/turmas', router);
 };
 
+router.get('/count', turmas.count);
 router.get('', turmas.list);
 router.post('', turmas.create);
 router.put('/:id', turmas.update);

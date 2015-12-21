@@ -32,6 +32,19 @@ var cursos = {
 
     return result;
   },
+  count: function(req, res, next){
+    var opt = {};
+
+    if (req.query.where) {
+      opt.where = JSON.parse(req.query.where);
+    }
+
+    opt.include = cursos.getInclude(req.query);
+
+    db.Curso.count(opt).then(function(value){
+      res.send({count: value});
+    }).catch(next);
+  },
   create: function(req, res, next){
     var curso = db.Curso.build(req.body);
 

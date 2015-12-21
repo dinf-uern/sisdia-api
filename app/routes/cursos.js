@@ -6,6 +6,7 @@ module.exports = function (app) {
   app.use('/v1/cursos', router);
 };
 
+router.get('/count', cursos.count);
 router.get('', cursos.list);
 router.post('', cursos.create);
 router.put('/:id', cursos.update);

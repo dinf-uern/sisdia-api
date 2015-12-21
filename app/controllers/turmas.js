@@ -31,6 +31,19 @@ var turmas = {
 
     return result;
   },
+  count: function(req, res, next){
+    var opt = {};
+
+    if (req.query.where) {
+      opt.where = JSON.parse(req.query.where);
+    }
+
+    opt.include = turmas.getInclude(req.query);
+
+    db.Turma.count(opt).then(function(value){
+      res.send({count: value});
+    }).catch(next);
+  },
   create: function(req, res, next){
     var turma = db.Turma.build(req.body);
 
