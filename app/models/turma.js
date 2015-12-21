@@ -1,7 +1,8 @@
 "use strict";
 
 var _ = require('underscore'),
-    moment = require('moment');
+    moment = require('moment'),
+    httpErrors = require('httperrors');
 
 module.exports = function(sequelize, DataTypes) {
   var Turma = sequelize.define("Turma", {
