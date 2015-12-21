@@ -40,6 +40,23 @@ var turmas = {
         next(err);
       });
   },
+  delete: function(req, res, next){
+    var opt = {
+      where: {id: req.params.id}
+    };
+
+    db.Turma.findOne(opt).then(function(turma){
+      if (!turma)
+        throw new httpErrors.BadRequest('Turma inexistente!');
+
+      return turma.destroy().then(function(result){
+        res.send({success: true});
+      });
+
+    }).catch(function(err){
+      next(err);
+    });
+  },
   read: function(req, res, next){
 
     var opt = {

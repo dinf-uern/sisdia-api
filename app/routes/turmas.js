@@ -10,3 +10,4 @@ router.get('', turmas.list);
 router.post('', turmas.create);
 router.put('/:id', turmas.update);
 router.get('/:id', turmas.read);
+router.delete('/:id', turmas.delete);

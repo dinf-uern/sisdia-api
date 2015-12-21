@@ -49,6 +49,23 @@ var salas = {
       next(err);
     });
   },
+  delete: function(req, res, next){
+    var opt = {
+      where: {id: req.params.id}
+    };
+
+    db.Sala.findOne(opt).then(function(sala){
+      if (!sala)
+        throw new httpErrors.BadRequest('Sala inexistente!');
+
+      return sala.destroy().then(function(result){
+        res.send({success: true});
+      });
+
+    }).catch(function(err){
+      next(err);
+    });
+  },
   read: function(req, res, next){
 
     var opt = {

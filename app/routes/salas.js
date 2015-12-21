@@ -10,3 +10,4 @@ router.get('', salas.list);
 router.post('', salas.create);
 router.put('/:id', salas.update);
 router.get('/:id', salas.read);
+router.delete('/:id', salas.delete);

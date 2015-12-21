@@ -53,6 +53,23 @@ var cursos = {
 
 
   },
+  delete: function(req, res, next){
+    var opt = {
+      where: {id: req.params.id}
+    };
+
+    db.Curso.findOne(opt).then(function(curso){
+      if (!curso)
+        throw new httpErrors.BadRequest('Curso inexistente!');
+
+      return curso.destroy().then(function(result){
+        res.send({success: true});
+      });
+
+    }).catch(function(err){
+      next(err);
+    });
+  },
   read: function(req, res, next){
 
     var opt = {

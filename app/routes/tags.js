@@ -10,3 +10,4 @@ router.get('', tags.list);
 router.post('', tags.create);
 router.put('/:id', tags.update);
 router.get('/:id', tags.read);
+router.delete('/:id', tags.delete);

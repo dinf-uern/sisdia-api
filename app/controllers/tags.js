@@ -39,6 +39,23 @@ var tags = {
         next(err);
       });
   },
+  delete: function(req, res, next){
+    var opt = {
+      where: {id: req.params.id}
+    };
+
+    db.Tag.findOne(opt).then(function(tag){
+      if (!tag)
+        throw new httpErrors.BadRequest('Tag inexistente!');
+
+      return tag.destroy().then(function(result){
+        res.send({success: true});
+      });
+
+    }).catch(function(err){
+      next(err);
+    });
+  },
   read: function(req, res, next){
 
     var opt = {

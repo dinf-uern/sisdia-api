@@ -10,3 +10,4 @@ router.get('', cursos.list);
 router.post('', cursos.create);
 router.put('/:id', cursos.update);
 router.get('/:id', cursos.read);
+router.delete('/:id', cursos.delete);
