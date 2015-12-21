@@ -5,6 +5,53 @@ var _ = require('underscore'),
     httpErrors = require('httperrors');
 
 module.exports = function(sequelize, DataTypes) {
+
+  function checarConflitoHorario(turma, options){
+    var self = this;
+
+    var promise = new Promise(function (resolve, reject) {
+
+      var opt = {
+        where: {$and: []}
+      };
+
+      var criterioPeriodo = {$or: []};
+      var criterioHorario = {$or: []};
+      var criterioDias = {$or: []};
+
+      if (turma.id)
+        opt.where.$and.push({id: {$ne: turma.id}})
+
+      opt.where.salaId = turma.salaId;
+
+      criterioPeriodo.$or.push({'periodoAulas.inicio': {$and: [{$gte: turma.periodoAulas.inicio}, {$lte: turma.periodoAulas.termino}]}});
+      criterioPeriodo.$or.push({'periodoAulas.termino': {$and: [{$gte: turma.periodoAulas.inicio}, {$lte: turma.periodoAulas.termino}]}});
+
+      criterioHorario.$or.push({'horarioAulas.horaInicio': {$and: [{$gte: turma.horarioAulas.horaInicio}, {$lt: turma.horarioAulas.horaTermino}]}});
+      criterioHorario.$or.push({'horarioAulas.horaTermino': {$and: [{$gt: turma.horarioAulas.horaInicio}, {$lte: turma.horarioAulas.horaTermino}]}});
+
+      _.each(turma.horarioAulas.dias, function (dia) {
+        criterioDias.$or.push({'horarioAulas': {$contains: {dias: [dia]}}});//'.replace('$1', data.horarioAulas.dias)}});
+      });
+
+      opt.where.$and.push(criterioPeriodo);
+      opt.where.$and.push(criterioHorario);
+      opt.where.$and.push(criterioDias);
+
+      return self.findAll(opt)
+        .then(function (turmas) {
+          if (turmas.length > 0) {
+            reject(new httpErrors.BadRequest('Há um conflito de horário!'));
+          } else {
+            resolve({success: true});
+          }
+        }).catch(reject);
+
+    });
+
+    return promise;
+  }
+
   var Turma = sequelize.define("Turma", {
     nome: {
       type: DataTypes.STRING,
@@ -84,6 +131,10 @@ module.exports = function(sequelize, DataTypes) {
       }
     }
   });
+
+  Turma.addHook('beforeUpdate', 'checarConflitoHorario', checarConflitoHorario);
+
+  Turma.addHook('beforeCreate', 'checarConflitoHorario', checarConflitoHorario);
 
   return Turma;
 };
