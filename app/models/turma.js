@@ -61,6 +61,9 @@ module.exports = function(sequelize, DataTypes) {
 
           if (!value.horaTermino || !moment(value.horaTermino).isValid())
             throw new Error('Informe uma hora de término válilda para as aulas!');
+
+          if (value.horaInicio > value.horaTermino)
+            throw new Error('O hora de início das aulas deve ser menor que a hora de término!');
         }
       }
     }
