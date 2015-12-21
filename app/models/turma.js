@@ -1,8 +1,57 @@
 "use strict";
 
-var  _ = require('underscore');
+var _ = require('underscore'),
+    moment = require('moment'),
+    httpErrors = require('httperrors');
 
 module.exports = function(sequelize, DataTypes) {
+
+  function checarConflitoHorario(turma, options){
+    var self = this;
+
+    var promise = new Promise(function (resolve, reject) {
+
+      var opt = {
+        where: {$and: []}
+      };
+
+      var criterioPeriodo = {$or: []};
+      var criterioHorario = {$or: []};
+      var criterioDias = {$or: []};
+
+      if (turma.id)
+        opt.where.$and.push({id: {$ne: turma.id}})
+
+      opt.where.salaId = turma.salaId;
+
+      criterioPeriodo.$or.push({'periodoAulas.inicio': {$and: [{$gte: turma.periodoAulas.inicio}, {$lte: turma.periodoAulas.termino}]}});
+      criterioPeriodo.$or.push({'periodoAulas.termino': {$and: [{$gte: turma.periodoAulas.inicio}, {$lte: turma.periodoAulas.termino}]}});
+
+      criterioHorario.$or.push({'horarioAulas.horaInicio': {$and: [{$gte: turma.horarioAulas.horaInicio}, {$lt: turma.horarioAulas.horaTermino}]}});
+      criterioHorario.$or.push({'horarioAulas.horaTermino': {$and: [{$gt: turma.horarioAulas.horaInicio}, {$lte: turma.horarioAulas.horaTermino}]}});
+
+      _.each(turma.horarioAulas.dias, function (dia) {
+        criterioDias.$or.push({'horarioAulas': {$contains: {dias: [dia]}}});//'.replace('$1', data.horarioAulas.dias)}});
+      });
+
+      opt.where.$and.push(criterioPeriodo);
+      opt.where.$and.push(criterioHorario);
+      opt.where.$and.push(criterioDias);
+
+      return self.findAll(opt)
+        .then(function (turmas) {
+          if (turmas.length > 0) {
+            reject(new httpErrors.BadRequest('Há um conflito de horário!'));
+          } else {
+            resolve({success: true});
+          }
+        }).catch(reject);
+
+    });
+
+    return promise;
+  }
+
   var Turma = sequelize.define("Turma", {
     nome: {
       type: DataTypes.STRING,
@@ -10,6 +59,58 @@ module.exports = function(sequelize, DataTypes) {
       validate: {
         notEmpty: {
           msg: 'O nome deve ser informado.'
+        }
+      }
+    },
+    periodoInscricoes: {
+      allowNull: false,
+      type: DataTypes.JSONB,
+      validate: {
+        terminoMaiorOuIgualAInicio: function(value){
+          if (!value.inicio || !moment(value.inicio).isValid())
+            throw new Error('Informe uma data válida para o início das inscrições!');
+
+          if (!value.termino || !moment(value.termino).isValid())
+            throw new Error('Informe uma data válida para o término das inscrições!');
+
+          if (moment(value.inicio) > moment(value.termino))
+            throw new Error('A data de início das inscrições não pode ser maior que a de término!');
+        }
+      }
+    },
+    periodoAulas: {
+      allowNull: false,
+      type: DataTypes.JSONB,
+      validate: {
+        terminoMaiorOuIgualAInicio: function(value){
+          if (!value.inicio || !moment(value.inicio).isValid())
+            throw new Error('Informe uma data válida para o início das aulas!');
+
+          if (!value.termino || !moment(value.termino).isValid())
+            throw new Error('Informe uma data válida para o término das aulas!');
+
+          if (moment(value.inicio) > moment(value.termino))
+            throw new Error('A data de início das aulas não pode ser maior que a de término!');
+        }
+      }
+    },
+    horarioAulas: {
+      allowNull: false,
+      type: DataTypes.JSONB,
+      validate: {
+        dias: function(value){
+          if (!value.dias || !(value.dias.constructor === Array) || value.dias.length <= 0)
+            throw new Error('Informe os dias de aula!');
+        },
+        horario: function(value){
+          if (!value.horaInicio || !moment(value.horaInicio).isValid())
+            throw new Error('Informe uma hora de início válilda para as aulas!');
+
+          if (!value.horaTermino || !moment(value.horaTermino).isValid())
+            throw new Error('Informe uma hora de término válilda para as aulas!');
+
+          if (value.horaInicio > value.horaTermino)
+            throw new Error('O hora de início das aulas deve ser menor que a hora de término!');
         }
       }
     }
@@ -20,8 +121,20 @@ module.exports = function(sequelize, DataTypes) {
         Turma.belongsTo(models.Sala, {as:'sala', foreignKey: 'salaId', targetKey: 'id'});
         Turma.belongsTo(models.Curso, {as:'curso', foreignKey: 'cursoId', targetKey: 'id'});
       }
+    },
+    validate: {
+      dataInscricoesVsAulas: function(){
+        var self = this;
+
+        if (moment(self.periodoInscricoes.termino) > moment(self.periodoAulas.inicio))
+          throw new Error('A data de término das inscrições não pode ser maior do que a data de início das aulas!');
+      }
     }
   });
+
+  Turma.addHook('beforeUpdate', 'checarConflitoHorario', checarConflitoHorario);
+
+  Turma.addHook('beforeCreate', 'checarConflitoHorario', checarConflitoHorario);
 
   return Turma;
 };

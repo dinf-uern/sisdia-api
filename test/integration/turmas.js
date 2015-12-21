@@ -6,6 +6,7 @@ var express = require('express'),
   config = require('../../config/config'),
   _ = require('underscore'),
   db = require('../../app/models'),
+  moment = require('moment'),
   app = express();
 
 require('../../config/express')(app, config);
@@ -42,7 +43,20 @@ describe('/v1/turmas', function () {
             operacoes.push(db.Turma.create({
               nome: 'turma' + i,
               salaId: sala.id,
-              cursoId: curso.id
+              cursoId: curso.id,
+              periodoInscricoes: {
+                inicio: moment().toJSON(),
+                termino: moment().toJSON()
+              },
+              periodoAulas: {
+                inicio: moment().toJSON(),
+                termino: moment().toJSON()
+              },
+              horarioAulas: {
+                dias: [1,2],
+                horaInicio: moment([1970]).toJSON(),
+                horaTermino: moment([1970]).toJSON()
+              }
             }))
           }
 
@@ -132,15 +146,38 @@ describe('/v1/turmas', function () {
   })
 
   describe('post /', function(){
+    var salaData = {
+      nome: 'sala qualquer'
+    };
+
+    var turmaData = {
+      nome: "turma1",
+      periodoInscricoes: {
+        inicio: moment().toJSON(),
+        termino: moment().toJSON()
+      },
+      periodoAulas: {
+        inicio: moment().toJSON(),
+        termino: moment().toJSON()
+      },
+      horarioAulas: {
+        dias: [1,2],
+        horaInicio: moment([1970]).toJSON(),
+        horaTermino: moment([1970]).toJSON()
+      }
+    };
+
 
     before(function(){
-      return db.sequelize.sync({force: true});
+      return db.sequelize.sync({force: true}).then(function(){
+        return db.Sala.create(salaData).then(function(sala){
+          return db.Turma.create(_.extend(turmaData, {salaId: sala.id}));
+        });
+      });
     });
 
     it('deve criar uma turma', function (done) {
-      var data = {
-        nome: 'some name'
-      };
+      var data = _.clone(turmaData);
 
       request(app)
         .post('/v1/turmas')
@@ -156,9 +193,68 @@ describe('/v1/turmas', function () {
     });
 
     it('deve impedir que uma turma sem nome seja criado', function (done) {
-      var data = {
-        nome: ''
+      var data = _.clone(turmaData);
+      data.nome = '';
+
+      request(app)
+        .post('/v1/turmas')
+        .send(data)
+        .set('Accept', 'application/json')
+        .expect('Content-Type', /json/)
+        .expect(400, done)
+        .expect(function(res){
+          res.body.should.instanceOf(Object);
+          res.body.should.have.property('message');
+        });
+    });
+
+    it('deve impedir que seja criada turma com dii > dti', function (done) {
+      var data = _.clone(turmaData);
+
+      data.periodoInscricoes = {
+        inicio: moment().add(1,'month').toJSON(),
+        termino: moment().toJSON()
       };
+
+      request(app)
+        .post('/v1/turmas')
+        .send(data)
+        .set('Accept', 'application/json')
+        .expect('Content-Type', /json/)
+        .expect(400, done)
+        .expect(function(res){
+          res.body.should.instanceOf(Object);
+          res.body.should.have.property('message');
+        })
+    });
+
+    it('deve impedir que seja criada turma com dia > dta', function (done) {
+      var data = _.clone(turmaData);
+
+      data.periodoAulas = {
+        inicio: moment().add(10, 'month').toJSON(),
+        termino: moment().add(9, 'month').toJSON()
+      };
+
+      request(app)
+        .post('/v1/turmas')
+        .send(data)
+        .set('Accept', 'application/json')
+        .expect('Content-Type', /json/)
+        .expect(400, done)
+        .expect(function(res){
+          res.body.should.instanceOf(Object);
+          res.body.should.have.property('message');
+        })
+    });
+
+    it('deve impedir que seja criada turma com dti > dia', function (done) {
+      var data = _.clone(turmaData);
+
+      data.periodoInscricoes.inicio = moment().add(1, 'month').toJSON();
+      data.periodoInscricoes.termino = moment().add(2, 'month').toJSON();
+      data.periodoAulas.inicio = moment().add(1, 'week').toJSON();
+      data.periodoAulas.termino = moment().add(2, 'week').toJSON();
 
       request(app)
         .post('/v1/turmas')
@@ -196,7 +292,20 @@ describe('/v1/turmas', function () {
           return db.Turma.create({
             nome: 'turma1',
             salaId: sala.id,
-            cursoId: curso.id
+            cursoId: curso.id,
+            periodoInscricoes: {
+              inicio: moment().toJSON(),
+              termino: moment().add(1, 'week').toJSON()
+            },
+            periodoAulas: {
+              inicio: moment().add(1, 'month').toJSON(),
+              termino: moment().add(2, 'month').toJSON()
+            },
+            horarioAulas: {
+              dias: [1,2],
+              horaInicio: moment([1970]).toJSON(),
+              horaTermino: moment([1970]).toJSON()
+            }
           }).then(function(result){
             turma = result.get({plain: true});
           });
@@ -252,7 +361,20 @@ describe('/v1/turmas', function () {
     before(function(){
       return db.sequelize.sync({force: true}).then(function(){
         return db.Turma.create({
-          nome: 'turma1'
+          nome: 'turma1',
+          periodoInscricoes: {
+            inicio: moment().toJSON(),
+            termino: moment().add(1, 'week').toJSON()
+          },
+          periodoAulas: {
+            inicio: moment().add(1, 'month').toJSON(),
+            termino: moment().add(2, 'month').toJSON()
+          },
+          horarioAulas: {
+            dias: [1,2],
+            horaInicio: moment([1970]).toJSON(),
+            horaTermino: moment([1970]).toJSON()
+          }
         }).then(function(result){
           turma = result;
         });
@@ -260,7 +382,22 @@ describe('/v1/turmas', function () {
     });
 
     it('deve ser capaz de atualizar uma turma', function (done) {
-      var data = {nome: 'novo nome'};
+      var data = {
+        nome: 'novo nome',
+        periodoInscricoes: {
+          inicio: moment(),
+          termino: moment()
+        },
+        periodoAulas: {
+          inicio: moment().add(),
+          termino: moment()
+        },
+        horarioAulas: {
+          dias: [1,2],
+          horaInicio: moment(),
+          horaTermino: moment()
+        }
+      };
 
       request(app)
         .put('/v1/turmas/' + turma.id)
