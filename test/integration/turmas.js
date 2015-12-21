@@ -187,11 +187,11 @@ describe('/v1/turmas', function () {
         nome: '',
         periodoInscricoes: {
           inicio: moment(),
-          termino: moment()
+          termino: moment().add(1, 'week')
         },
         periodoAulas: {
-          inicio: moment().add(),
-          termino: moment()
+          inicio: moment().add(1, 'month'),
+          termino: moment().add(2, 'month')
         },
         horarioAulas: {
           dias: [1,2],
@@ -211,6 +211,98 @@ describe('/v1/turmas', function () {
           res.body.should.have.property('message');
         })
     });
+
+    it('deve impedir que seja criada turma com dii > dti', function (done) {
+      var data = {
+        nome: 'turma qualquer',
+        periodoInscricoes: {
+          inicio: moment().add(2, 'week'),
+          termino: moment().add(1, 'week')
+        },
+        periodoAulas: {
+          inicio: moment().add(1, 'month'),
+          termino: moment().add(2, 'month')
+        },
+        horarioAulas: {
+          dias: [1,2],
+          horaInicio: moment(),
+          horaTermino: moment()
+        }
+      };
+
+      request(app)
+        .post('/v1/turmas')
+        .send(data)
+        .set('Accept', 'application/json')
+        .expect('Content-Type', /json/)
+        .expect(400, done)
+        .expect(function(res){
+          res.body.should.instanceOf(Object);
+          res.body.should.have.property('message');
+        })
+    });
+
+    it('deve impedir que seja criada turma com dia > dta', function (done) {
+      var data = {
+        nome: 'turma qualquer',
+        periodoInscricoes: {
+          inicio: moment(),
+          termino: moment().add(1, 'week')
+        },
+        periodoAulas: {
+          inicio: moment().add(2, 'month'),
+          termino: moment().add(1, 'month')
+        },
+        horarioAulas: {
+          dias: [1,2],
+          horaInicio: moment(),
+          horaTermino: moment()
+        }
+      };
+
+      request(app)
+        .post('/v1/turmas')
+        .send(data)
+        .set('Accept', 'application/json')
+        .expect('Content-Type', /json/)
+        .expect(400, done)
+        .expect(function(res){
+          res.body.should.instanceOf(Object);
+          res.body.should.have.property('message');
+        })
+    });
+
+    it('deve impedir que seja criada turma com dti > dia', function (done) {
+      var data = {
+        nome: 'turma qualquer',
+        periodoInscricoes: {
+          inicio: moment(),
+          termino: moment().add(2, 'week')
+        },
+        periodoAulas: {
+          inicio: moment().add(1, 'week'),
+          termino: moment().add(2, 'month')
+        },
+        horarioAulas: {
+          dias: [1,2],
+          horaInicio: moment(),
+          horaTermino: moment()
+        }
+      };
+
+      request(app)
+        .post('/v1/turmas')
+        .send(data)
+        .set('Accept', 'application/json')
+        .expect('Content-Type', /json/)
+        .expect(400, done)
+        .expect(function(res){
+          res.body.should.instanceOf(Object);
+          res.body.should.have.property('message');
+        })
+    });
+
+
   })
 
   describe('get /:id', function(){
