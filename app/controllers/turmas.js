@@ -125,7 +125,9 @@ var turmas = {
       if (!turma)
         return next(httpErrors.BadRequest('Turma inexistente!'));
 
-        turma.update(req.body).then(function(){
+        var data = _.omit(req.body, 'nome');
+
+        turma.update(data).then(function(){
           res.send(turma);
         }).catch(function(err){
           next(err);
