@@ -44,9 +44,7 @@ var salas = {
     }).catch(next);
   },
   create: function(req, res, next){
-    var sala = db.Sala.build({
-      nome: req.body.nome
-    });
+    var sala = db.Sala.build(req.body);
 
     sala.validate().then(function(result){
       if (result && result.errors && result.errors.length > 0)
@@ -128,9 +126,7 @@ var salas = {
       if (!sala)
         return next(httpErrors.BadRequest('Sala inexistente!'));
 
-      sala.set('nome', req.body.nome);
-
-      sala.validate().then(function(result){
+      sala.update(req.body).then(function(result){
         if (result && result.errors && result.errors.length > 0)
           return next(httpErrors.BadRequest(result.errors[0].message));
 
