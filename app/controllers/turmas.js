@@ -127,15 +127,11 @@ var turmas = {
 
         var data = _.omit(req.body, 'nome');
 
-        turma.update(data).then(function(){
+        return turma.update(data).then(function(){
           res.send(turma);
-        }).catch(function(err){
-          next(err);
-        });
+        })
 
-    }).catch(function(err){
-      next(err);
-    });
+    }).catch(next);
   }
 }
 
