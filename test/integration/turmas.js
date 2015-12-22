@@ -44,6 +44,8 @@ describe('/v1/turmas', function () {
               nome: 'turma' + i,
               salaId: sala.id,
               cursoId: curso.id,
+              totalVagas: 20,
+              cor: "#ff5522",
               periodoInscricoes: {
                 inicio: moment().toJSON(),
                 termino: moment().toJSON()
@@ -65,7 +67,7 @@ describe('/v1/turmas', function () {
               return item.get();
             })
 
-            return turmas;
+            return turmas;//
           });
         });
       });
@@ -152,6 +154,8 @@ describe('/v1/turmas', function () {
 
     var turmaData = {
       nome: "turma1",
+      totalVagas: 20,
+      cor: "#ff5522",
       periodoInscricoes: {
         inicio: moment().toJSON(),
         termino: moment().toJSON()
@@ -293,6 +297,8 @@ describe('/v1/turmas', function () {
             nome: 'turma1',
             salaId: sala.id,
             cursoId: curso.id,
+            totalVagas: 20,
+            cor: "#ff5522",
             periodoInscricoes: {
               inicio: moment().toJSON(),
               termino: moment().add(1, 'week').toJSON()
@@ -362,6 +368,8 @@ describe('/v1/turmas', function () {
       return db.sequelize.sync({force: true}).then(function(){
         return db.Turma.create({
           nome: 'turma1',
+          totalVagas: 20,
+          cor: "#ff5522",
           periodoInscricoes: {
             inicio: moment().toJSON(),
             termino: moment().add(1, 'week').toJSON()
@@ -383,20 +391,7 @@ describe('/v1/turmas', function () {
 
     it('deve ser capaz de atualizar uma turma', function (done) {
       var data = {
-        nome: 'novo nome',
-        periodoInscricoes: {
-          inicio: moment(),
-          termino: moment()
-        },
-        periodoAulas: {
-          inicio: moment().add(),
-          termino: moment()
-        },
-        horarioAulas: {
-          dias: [1,2],
-          horaInicio: moment(),
-          horaTermino: moment()
-        }
+        totalVagas: 2
       };
 
       request(app)
@@ -408,7 +403,7 @@ describe('/v1/turmas', function () {
         .expect(function(res){
           res.body.should.instanceOf(Object);
           res.body.should.have.property('id', turma.id);
-          res.body.should.have.property('nome', data.nome);
+          res.body.should.have.property('totalVagas', data.totalVagas);
         })
     });
 
