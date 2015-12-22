@@ -62,6 +62,24 @@ module.exports = function(sequelize, DataTypes) {
         }
       }
     },
+    totalVagas: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      validate: {
+        notEmpty: {
+          msg: 'O total de vagas deve ser informado.'
+        }
+      }
+    },
+    cor: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      validate: {
+        notEmpty: {
+          msg: 'Forneca uma cor para a turma.'
+        }
+      }
+    },
     periodoInscricoes: {
       allowNull: false,
       type: DataTypes.JSONB,

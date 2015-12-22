@@ -12,6 +12,10 @@ module.exports = function(sequelize, DataTypes) {
           msg: 'O nome deve ser informado.'
         }
       }
+    },
+    imgUrl: {
+      type: DataTypes.STRING,
+      allowNull: true
     }
   }, {
     tableName: 'tags',
