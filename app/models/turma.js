@@ -158,8 +158,6 @@ module.exports = function(sequelize, DataTypes) {
       setNomeFromTemplate: function(templateNome, options) {
         var self = this;
 
-        console.log(self)
-
         var novoNome = templateNome
           .replace('{{id}}', self.id)
           .replace('{{turno}}', getTurno(self.horarioAulas.horaTermino));
