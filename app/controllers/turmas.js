@@ -47,11 +47,17 @@ var turmas = {
   create: function(req, res, next){
     var turma = db.Turma.build(req.body);
 
-      turma.save().then(function(result){
-        res.send(result);
-      }).catch(function(err) {
-        next(err);
+    db.sequelize.transaction(function (t) {
+      var opt = {transaction: t};
+
+      return turma.save(opt).then(function(result){
+        return result.setNomeFromTemplate(result.nome, opt).then(function(data){
+          res.send(result);
+        });
       });
+
+    }).catch(next);
+
   },
   delete: function(req, res, next){
     var opt = {

@@ -6,6 +6,26 @@ var _ = require('underscore'),
 
 module.exports = function(sequelize, DataTypes) {
 
+  var diaBase = moment([1970]);
+  var inicioTarde = diaBase.clone().add(12, 'hour');
+  var fimTarde = diaBase.clone().add(18, 'hour');
+
+
+  function getTurno(hora){
+    var result;
+
+    if (moment(hora).isBefore(inicioTarde))
+      result = 'manhã';
+
+    if (moment(hora).isSame(inicioTarde) || moment(hora).isSame(fimTarde) || moment(hora).isBetween(inicioTarde, fimTarde))
+      result = 'tarde';
+
+    if (moment(hora).isAfter(fimTarde))
+      result = 'noite';
+
+    return result;
+  }
+
   function checarConflitoHorario(turma, options){
     var self = this;
 
@@ -134,6 +154,19 @@ module.exports = function(sequelize, DataTypes) {
     }
   }, {
     tableName: 'turmas',
+    instanceMethods: {
+      setNomeFromTemplate: function(templateNome, options) {
+        var self = this;
+
+        console.log(self)
+
+        var novoNome = templateNome
+          .replace('{{id}}', self.id)
+          .replace('{{turno}}', getTurno(self.horarioAulas.horaTermino));
+
+        return this.update({ nome: novoNome }, options);
+      }
+    },
     classMethods: {
       associate: function(models) {
         Turma.belongsTo(models.Sala, {as:'sala', foreignKey: 'salaId', targetKey: 'id'});
