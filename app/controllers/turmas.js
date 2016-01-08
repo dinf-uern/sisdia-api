@@ -9,7 +9,9 @@ var turmas = {
     var result = [];
 
     var includeOptions = {
-      'curso': { model: db.Curso, as: 'curso' },
+      'curso': { model: db.Curso, as: 'curso', include: [
+        { model: db.Tag, as: 'tags' }
+      ] },
       'sala': { model: db.Sala, as: 'sala' }
     }
 
