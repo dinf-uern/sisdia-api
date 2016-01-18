@@ -2,7 +2,8 @@ process.env.PWD = process.cwd();
 
 var path = require('path'),
   rootPath = process.env.PWD,
-  env = process.env.NODE_ENV || 'development';
+  env = process.env.NODE_ENV || 'development',
+  db = process.env.DATABASE_URL;
 
 var config = {
   development: {
@@ -12,7 +13,7 @@ var config = {
     },
     dumpSql: true,
     port: 3500,
-    db: 'postgres://postgres:postgres@localhost:5432/sisdia-dev'
+    db: db
   },
 
   test: {
@@ -22,7 +23,7 @@ var config = {
     },
     dropTables: true,
     port: 3500,
-    db: 'postgres://postgres:postgres@localhost:5432/sisdia-test'
+    db: db
   },
 
   stage: {
@@ -32,7 +33,7 @@ var config = {
     },
     dropTables: false,
     port: 8080,
-    db: process.env.DATABASE_URL
+    db: db
   },
 
   production: {
@@ -41,7 +42,7 @@ var config = {
       name: 'sisdia'
     },
     port: 443,
-    db: 'postgres://gnzeglgh:q0Ur3_VJ_PQD1HDghjyVGWbBhrUMKGLg@qdjjtnkv.db.elephantsql.com:5432/gnzeglgh'
+    db: db
   }
 };
 
