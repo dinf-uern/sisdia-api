@@ -42,7 +42,7 @@ module.exports = function(sequelize, DataTypes) {
       if (turma.id)
         opt.where.$and.push({id: {$ne: turma.id}});
 
-      opt.where.salaId = turma.salaId;
+      var criterioMesmaSala = {salaId: turma.salaId};
 
       criterioPeriodo.$or.push({'periodoAulas.inicio': {$and: [{$gte: turma.periodoAulas.inicio}, {$lte: turma.periodoAulas.termino}]}});
       criterioPeriodo.$or.push({'periodoAulas.termino': {$and: [{$gte: turma.periodoAulas.inicio}, {$lte: turma.periodoAulas.termino}]}});
@@ -54,6 +54,7 @@ module.exports = function(sequelize, DataTypes) {
         criterioDias.$or.push({'horarioAulas': {$contains: {dias: [dia]}}});//'.replace('$1', data.horarioAulas.dias)}});
       });
 
+      opt.where.$and.push(criterioMesmaSala);
       opt.where.$and.push(criterioPeriodo);
       opt.where.$and.push(criterioHorario);
       opt.where.$and.push(criterioDias);
