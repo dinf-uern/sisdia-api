@@ -43,6 +43,7 @@ module.exports = function(sequelize, DataTypes) {
         opt.where.$and.push({id: {$ne: turma.id}});
 
       var criterioMesmaSala = {salaId: turma.salaId};
+      var criterioTurmaEmAndamento = { $or : [{ encerrada: null }, { encerrada: false }] };
 
       criterioPeriodo.$or.push({'periodoAulas.inicio': {$and: [{$gte: turma.periodoAulas.inicio}, {$lte: turma.periodoAulas.termino}]}});
       criterioPeriodo.$or.push({'periodoAulas.termino': {$and: [{$gte: turma.periodoAulas.inicio}, {$lte: turma.periodoAulas.termino}]}});
@@ -55,6 +56,7 @@ module.exports = function(sequelize, DataTypes) {
       });
 
       opt.where.$and.push(criterioMesmaSala);
+      opt.where.$and.push(criterioTurmaEmAndamento);
       opt.where.$and.push(criterioPeriodo);
       opt.where.$and.push(criterioHorario);
       opt.where.$and.push(criterioDias);
