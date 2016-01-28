@@ -40,9 +40,10 @@ module.exports = function(sequelize, DataTypes) {
       var criterioDias = {$or: []};
 
       if (turma.id)
-        opt.where.$and.push({id: {$ne: turma.id}})
+        opt.where.$and.push({id: {$ne: turma.id}});
 
-      opt.where.salaId = turma.salaId;
+      var criterioMesmaSala = {salaId: turma.salaId};
+      var criterioTurmaEmAndamento = { $or : [{ encerrada: null }, { encerrada: false }] };
 
       criterioPeriodo.$or.push({'periodoAulas.inicio': {$and: [{$gte: turma.periodoAulas.inicio}, {$lte: turma.periodoAulas.termino}]}});
       criterioPeriodo.$or.push({'periodoAulas.termino': {$and: [{$gte: turma.periodoAulas.inicio}, {$lte: turma.periodoAulas.termino}]}});
@@ -54,6 +55,8 @@ module.exports = function(sequelize, DataTypes) {
         criterioDias.$or.push({'horarioAulas': {$contains: {dias: [dia]}}});//'.replace('$1', data.horarioAulas.dias)}});
       });
 
+      opt.where.$and.push(criterioMesmaSala);
+      opt.where.$and.push(criterioTurmaEmAndamento);
       opt.where.$and.push(criterioPeriodo);
       opt.where.$and.push(criterioHorario);
       opt.where.$and.push(criterioDias);
@@ -151,6 +154,11 @@ module.exports = function(sequelize, DataTypes) {
             throw new Error('O hora de início das aulas deve ser menor que a hora de término!');
         }
       }
+    },
+    encerrada: {
+      allowNull: true,
+      type: DataTypes.BOOLEAN
+
     }
   }, {
     tableName: 'turmas',
