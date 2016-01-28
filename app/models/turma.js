@@ -40,7 +40,7 @@ module.exports = function(sequelize, DataTypes) {
       var criterioDias = {$or: []};
 
       if (turma.id)
-        opt.where.$and.push({id: {$ne: turma.id}})
+        opt.where.$and.push({id: {$ne: turma.id}});
 
       opt.where.salaId = turma.salaId;
 
@@ -155,6 +155,7 @@ module.exports = function(sequelize, DataTypes) {
     encerrada: {
       allowNull: true,
       type: DataTypes.BOOLEAN
+
     }
   }, {
     tableName: 'turmas',
