@@ -151,6 +151,10 @@ module.exports = function(sequelize, DataTypes) {
             throw new Error('O hora de início das aulas deve ser menor que a hora de término!');
         }
       }
+    },
+    encerrada: {
+      allowNull: true,
+      type: DataTypes.BOOLEAN
     }
   }, {
     tableName: 'turmas',
