@@ -4,7 +4,8 @@
   "private": true,
   "scripts": {
     "start": "node server.js",
-    "test": "node_modules/.bin/mocha -w -t 3000"
+    "test": "node_modules/.bin/mocha -w -t 3000",
+    "postinstall": "node_modules/.bin/sequelize db:migrate"
   },
   "dependencies": {
     "bluebird": "^3.1.1",
@@ -22,7 +23,7 @@
     "morgan": "~1.6.1",
     "pg": "~4.4.1",
     "pg-hstore": "2.3.2",
-    "sequelize": "^3.17.3",
+    "sequelize": "~3.18.0",
     "sequelize-cli": "^2.3.1",
     "serve-favicon": "~2.3.0",
     "underscore": "~1.8.3",
