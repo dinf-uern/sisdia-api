@@ -140,7 +140,7 @@ describe('/v1/turmas', function () {
         .expect(200, done)
         .expect(function(res){
           res.body.should.instanceOf(Array);
-          omitDateFields(res.body[0].curso).should.be.eql(omitDateFields(curso));
+          omitDateFields(_.omit(res.body[0].curso, 'tags')).should.be.eql(omitDateFields(curso));
           omitDateFields(res.body[0].sala).should.be.eql(omitDateFields(sala));
         })
     });
@@ -343,7 +343,7 @@ describe('/v1/turmas', function () {
         .expect(200, done)
         .expect(function(res){
           res.body.should.instanceOf(Object);
-          omitDateFields(res.body.curso).should.be.eql(omitDateFields(curso));
+          omitDateFields(_.omit(res.body.curso, 'tags')).should.be.eql(omitDateFields(curso));
           omitDateFields(res.body.sala).should.be.eql(omitDateFields(sala));
         })
     });

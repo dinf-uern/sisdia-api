@@ -1,6 +1,7 @@
 "use strict";
 
-var  _ = require('underscore');
+var  _ = require('underscore'),
+    httpErrors = require('httperrors');
 
 module.exports = function(sequelize, DataTypes) {
   var Tag = sequelize.define("Tag", {
@@ -49,6 +50,16 @@ module.exports = function(sequelize, DataTypes) {
       }
     }
   });
+
+  function checarExistenciaTurmaVinculada(tag, options){
+    var self = this;
+    return tag.getCursos().then(function(result){
+      if (result.length > 0)
+        throw new httpErrors.BadRequest('Há curso vinculado!')
+    });
+  }
+
+  Tag.addHook('beforeDestroy', 'checarExistenciaTurmaVinculada', checarExistenciaTurmaVinculada);
 
   return Tag;
 };
