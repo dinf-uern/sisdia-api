@@ -51,6 +51,16 @@ module.exports = function(sequelize, DataTypes) {
     }
   });
 
+  function checarExistenciaTurmaVinculada(curso, options){
+    var self = this;
+    return curso.getTurmas().then(function(result){
+      if (result.length > 0)
+        throw new httpErrors.BadRequest('Há turma vinculada!')
+    });
+  }
+
+  Curso.addHook('beforeDestroy', 'checarExistenciaTurmaVinculada', checarExistenciaTurmaVinculada);
+
   return Curso;
 };
 
