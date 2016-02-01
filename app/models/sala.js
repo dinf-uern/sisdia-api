@@ -1,6 +1,7 @@
 "use strict";
 
-var  _ = require('underscore');
+var  _ = require('underscore'),
+    httpErrors = require('httperrors');
 
 module.exports = function(sequelize, DataTypes) {
   var Sala = sequelize.define("Sala", {
@@ -29,6 +30,16 @@ module.exports = function(sequelize, DataTypes) {
       }
     }
   });
+
+  function checarExistenciaTurmaVinculada(sala, options){
+    var self = this;
+    return sala.getTurmas().then(function(result){
+      if (result.length > 0)
+        throw new httpErrors.BadRequest('Há turma vinculada!')
+    });
+  }
+
+  Sala.addHook('beforeDestroy', 'checarExistenciaTurmaVinculada', checarExistenciaTurmaVinculada);
 
   return Sala;
 };
