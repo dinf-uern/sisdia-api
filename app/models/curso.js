@@ -45,8 +45,8 @@ module.exports = function(sequelize, DataTypes) {
     tableName: 'cursos',
     classMethods: {
       associate: function(models) {
-        Curso.belongsToMany(models.Tag, { as: 'tags', through: 'curso_tags', foreignKey: 'cursoId' });
-        Curso.hasMany(models.Turma, {as: 'turmas', foreignKey: 'cursoId' });
+        Curso.belongsToMany(models.Tag, { as: 'tags', through: 'curso_tags', foreignKey: 'cursoId', targetKey: "id" });
+        Curso.hasMany(models.Turma, {as: 'turmas', foreignKey: 'cursoId', targetKey: "id" });
       }
     }
   });
