@@ -82,7 +82,10 @@ var turmas = {
       where: {id: req.params.id}
     };
 
-    opt.include = turmas.getIncludedModels(req.query);
+    if (req.query.include) {
+      var include = JSON.parse(req.query.include);
+      opt.include = turmas.getIncludedModels(include);
+    }
 
     db.Turma.findOne(opt).then(function(result){
       if (!result)
