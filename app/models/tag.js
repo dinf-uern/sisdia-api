@@ -22,7 +22,7 @@ module.exports = function(sequelize, DataTypes) {
     tableName: 'tags',
     classMethods: {
       associate: function(models) {
-        Tag.belongsToMany(models.Curso, { as: 'cursos', through: 'curso_tags', foreignKey: 'tagId' })
+        Tag.belongsToMany(models.Curso, { as: 'cursos', through: 'curso_tags', foreignKey: 'tagId', targetKey: "id" })
       },
       bulkFindOrCreate: function(rows, options){
         var self = this;

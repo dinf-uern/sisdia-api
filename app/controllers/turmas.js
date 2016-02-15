@@ -5,33 +5,31 @@ var express = require('express'),
   db = require('../models');
 
 var turmas = {
-  getInclude: function(query){
-    var result = [];
+  getIncludedModels: function(includedItems){
+    var relatedModels = {
+      "tags": { model: db.Tag, as: 'tags' },
+      "curso": { model: db.Curso, as: 'curso' },
+      "sala": { model: db.Sala, as: 'sala' }
+    };
 
-    var includeOptions = {
-      'curso': { model: db.Curso, as: 'curso', include: [
-        { model: db.Tag, as: 'tags' }
-      ] },
-      'sala': { model: db.Sala, as: 'sala' }
+    function prepareModel(item){
+      var model = relatedModels[item.model];
+      var cleanItem = _.omit(item, 'model');
+
+      if (model)
+        return _.extend(model, cleanItem);
     }
 
+    function prepareIncludes(items){
+      return _.map(items, function(item){
+        if (item.include)
+          item.include = prepareIncludes(item.include);
 
-    if (query.include) {
-      var include = JSON.parse(query.include);
-
-      _.each(include, function(incItem){
-        if (includeOptions[incItem.model]) {
-          var includeOption = _.extend(
-            _.omit(incItem, 'model'),
-            includeOptions[incItem.model]
-          );
-
-          result.push(includeOption);
-        }
+        return prepareModel(item);
       });
     }
 
-    return result;
+    return prepareIncludes(includedItems);
   },
   count: function(req, res, next){
     var opt = {};
@@ -40,7 +38,7 @@ var turmas = {
       opt.where = JSON.parse(req.query.where);
     }
 
-    opt.include = turmas.getInclude(req.query);
+    opt.include = turmas.getIncludedModels(req.query);
 
     db.Turma.count(opt).then(function(value){
       res.send({count: value});
@@ -84,7 +82,10 @@ var turmas = {
       where: {id: req.params.id}
     };
 
-    opt.include = turmas.getInclude(req.query);
+    if (req.query.include) {
+      var include = JSON.parse(req.query.include);
+      opt.include = turmas.getIncludedModels(include);
+    }
 
     db.Turma.findOne(opt).then(function(result){
       if (!result)
@@ -98,19 +99,18 @@ var turmas = {
   list: function(req, res, next){
     var op = 'findAll';
 
-    var limit = req.query.limit && parseInt(req.query.limit) <= 20 ? req.query.limit : 10 ;
-    var offset = req.query.offset || 0;
-
-    var opt = {
-      limit: limit,
-      offset: offset
-    };
+    var opt = {};
 
     if (req.query.where){
       opt.where = JSON.parse(req.query.where);
     }
 
-    opt.include = turmas.getInclude(req.query);
+    if (req.query.include) {
+      var include = JSON.parse(req.query.include);
+      opt.include = turmas.getIncludedModels(include);
+    }
+
+
 
     if (req.query.attributes) {
       opt.attributes = req.query.attributes.split(',');
