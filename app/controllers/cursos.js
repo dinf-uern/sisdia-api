@@ -6,31 +6,30 @@ var express = require('express'),
 
 
 var cursos = {
-  getInclude: function(query){
-    var result = [];
+  getIncludedModels: function(includedItems){
+    var relatedModels = {
+      "tags": { model: db.Tag, as: 'tags' },
+      "turmas": { model: db.Turma, as: 'turmas' }
+    };
 
-    var includeOptions = {
-      'tags': { model: db.Tag, as: 'tags' },
-      'turmas': { model: db.Turma, as: 'turmas' }
+    function prepareModel(item){
+      var model = relatedModels[item.model];
+      var cleanItem = _.omit(item, 'model');
+
+      if (model)
+        return _.extend(model, cleanItem);
     }
 
+    function prepareIncludes(items){
+      return _.map(items, function(item){
+        if (item.include)
+          item.include = prepareIncludes(item.include);
 
-    if (query.include) {
-      var include = JSON.parse(query.include);
-
-      _.each(include, function(incItem){
-        if (includeOptions[incItem.model]) {
-          var includeOption = _.extend(
-            _.omit(incItem, 'model'),
-            includeOptions[incItem.model]
-          );
-
-          result.push(includeOption);
-        }
+        return prepareModel(item);
       });
     }
 
-    return result;
+    return prepareIncludes(includedItems);
   },
   count: function(req, res, next){
     var opt = {};
@@ -39,7 +38,10 @@ var cursos = {
       opt.where = JSON.parse(req.query.where);
     }
 
-    opt.include = cursos.getInclude(req.query);
+    if (req.query.include) {
+      var include = JSON.parse(req.query.include);
+      opt.include = turmas.getIncludedModels(include);
+    }
 
     db.Curso.count(opt).then(function(value){
       res.send({count: value});
@@ -89,7 +91,10 @@ var cursos = {
       where: {id: req.params.id}
     };
 
-    opt.include = cursos.getInclude(req.query);
+    if (req.query.include) {
+      var include = JSON.parse(req.query.include);
+      opt.include = turmas.getIncludedModels(include);
+    }
 
     db.Curso.findOne(opt).then(function(result){
       if (!result)
@@ -115,7 +120,10 @@ var cursos = {
       opt.where = JSON.parse(req.query.where);
     }
 
-    opt.include = cursos.getInclude(req.query);
+    if (req.query.include) {
+      var include = JSON.parse(req.query.include);
+      opt.include = turmas.getIncludedModels(include);
+    }
 
     if (req.query.attributes) {
       opt.attributes = req.query.attributes.split(',');
