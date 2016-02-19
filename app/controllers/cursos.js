@@ -40,7 +40,7 @@ var cursos = {
 
     if (req.query.include) {
       var include = JSON.parse(req.query.include);
-      opt.include = turmas.getIncludedModels(include);
+      opt.include = cursos.getIncludedModels(include);
     }
 
     db.Curso.count(opt).then(function(value){
@@ -93,7 +93,7 @@ var cursos = {
 
     if (req.query.include) {
       var include = JSON.parse(req.query.include);
-      opt.include = turmas.getIncludedModels(include);
+      opt.include = cursos.getIncludedModels(include);
     }
 
     db.Curso.findOne(opt).then(function(result){
@@ -122,7 +122,7 @@ var cursos = {
 
     if (req.query.include) {
       var include = JSON.parse(req.query.include);
-      opt.include = turmas.getIncludedModels(include);
+      opt.include = cursos.getIncludedModels(include);
     }
 
     if (req.query.attributes) {
